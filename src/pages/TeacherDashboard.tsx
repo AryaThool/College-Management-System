@@ -465,5 +465,3 @@ const TeacherDashboard: React.FC = () => {
 };
 
 export default TeacherDashboard;
-
-export default TeacherDashboard
