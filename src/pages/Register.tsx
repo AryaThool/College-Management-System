@@ -59,13 +59,13 @@ const Register: React.FC = () => {
   };
 
   const handleCaptchaError = (error: any) => {
-    setError('CAPTCHA verification failed. Please try again.');
+    setError('Security verification failed. Please try again.');
     setCaptchaToken(null);
   };
 
   const handleCaptchaExpire = () => {
     setCaptchaToken(null);
-    setError('CAPTCHA expired. Please verify again.');
+    setError('Security verification expired. Please verify again.');
   };
 
   const resetCaptcha = () => {
@@ -109,7 +109,7 @@ const Register: React.FC = () => {
 
     // Validate CAPTCHA
     if (!captchaToken) {
-      setError('Please complete the CAPTCHA verification.');
+      setError('Please complete the security verification.');
       return;
     }
 
@@ -349,7 +349,7 @@ const Register: React.FC = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-center text-sm text-gray-600 mb-2">
                   <Shield className="h-4 w-4 mr-2" />
-                  Please verify you're not a robot
+                  Please complete the security verification
                 </div>
                 <HCaptchaComponent
                   ref={captchaRef}
@@ -375,7 +375,7 @@ const Register: React.FC = () => {
                   Creating account...
                 </div>
               ) : showCaptcha && !captchaToken ? (
-                'Complete CAPTCHA to continue'
+                'Complete security verification to continue'
               ) : showCaptcha && captchaToken ? (
                 'Create account'
               ) : (
@@ -386,8 +386,8 @@ const Register: React.FC = () => {
 
           {showCaptcha && (
             <div className="mt-4 text-center">
-              <p className="text-xs text-gray-500">
-                Protected by hCaptcha for security
+              <p className="text-xs text-gray-500 mb-2">
+                Secured with hCaptcha
               </p>
               <button
                 type="button"
@@ -396,9 +396,9 @@ const Register: React.FC = () => {
                   resetCaptcha();
                   setError('');
                 }}
-                className="text-xs text-indigo-600 hover:text-indigo-500 mt-1"
+                className="text-xs text-indigo-600 hover:text-indigo-500"
               >
-                Go back to form
+                ← Go back to form
               </button>
             </div>
           )}
