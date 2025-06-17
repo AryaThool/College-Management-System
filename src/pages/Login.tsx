@@ -44,6 +44,12 @@ const Login: React.FC = () => {
     e.preventDefault();
     setError('');
 
+    // Basic validation
+    if (!email || !password) {
+      setError('Please fill in all fields.');
+      return;
+    }
+
     // Show CAPTCHA on first attempt or if there was a previous error
     if (!showCaptcha) {
       setShowCaptcha(true);
@@ -89,6 +95,7 @@ const Login: React.FC = () => {
       console.error('Login error:', err);
       setError('Invalid email or password. Please try again.');
       resetCaptcha();
+      setShowCaptcha(false); // Hide CAPTCHA to allow retry
     } finally {
       setLoading(false);
     }
@@ -161,6 +168,7 @@ const Login: React.FC = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 className="input-field"
                 placeholder="Enter your email"
+                disabled={loading}
               />
             </div>
 
@@ -178,6 +186,7 @@ const Login: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="input-field"
                 placeholder="Enter your password"
+                disabled={loading}
               />
             </div>
 
@@ -218,26 +227,25 @@ const Login: React.FC = () => {
 
             <button
               type="submit"
-              disabled={loading || (showCaptcha && !captchaToken)}
+              disabled={loading}
               className={`btn-primary w-full ${
-                loading || (showCaptcha && !captchaToken) 
-                  ? 'opacity-50 cursor-not-allowed' 
-                  : ''
+                loading ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
               {loading ? (
-                'Signing in...'
-              ) : showCaptcha ? (
-                captchaToken ? (
-                  <>
-                    Sign in
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </>
-                ) : (
-                  'Complete CAPTCHA to continue'
-                )
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                  Signing in...
+                </div>
+              ) : showCaptcha && !captchaToken ? (
+                'Complete CAPTCHA to continue'
+              ) : showCaptcha && captchaToken ? (
+                <>
+                  Sign in
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </>
               ) : (
-                'Continue to verification'
+                'Continue'
               )}
             </button>
           </form>
@@ -247,6 +255,17 @@ const Login: React.FC = () => {
               <p className="text-xs text-gray-500">
                 Protected by hCaptcha for security
               </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCaptcha(false);
+                  resetCaptcha();
+                  setError('');
+                }}
+                className="text-xs text-indigo-600 hover:text-indigo-500 mt-1"
+              >
+                Go back to form
+              </button>
             </div>
           )}
         </div>

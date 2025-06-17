@@ -141,6 +141,7 @@ const Register: React.FC = () => {
       console.error('Registration error:', err);
       setError('Error registering account. Email may already be in use.');
       resetCaptcha();
+      setShowCaptcha(false); // Hide CAPTCHA to allow retry
     } finally {
       setLoading(false);
     }
@@ -226,6 +227,7 @@ const Register: React.FC = () => {
                 onChange={(e) => setName(e.target.value)}
                 className="input-field"
                 placeholder="Enter your full name"
+                disabled={loading}
               />
             </div>
 
@@ -243,6 +245,7 @@ const Register: React.FC = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 className="input-field"
                 placeholder="Enter your email"
+                disabled={loading}
               />
             </div>
 
@@ -258,6 +261,7 @@ const Register: React.FC = () => {
                   value={department}
                   onChange={(e) => setDepartment(e.target.value)}
                   className="input-field appearance-none pr-10"
+                  disabled={loading}
                 >
                   <option value="" disabled>
                     Select a department
@@ -287,6 +291,7 @@ const Register: React.FC = () => {
                     value={designation}
                     onChange={(e) => setDesignation(e.target.value)}
                     className="input-field appearance-none pr-10"
+                    disabled={loading}
                   >
                     <option value="" disabled>
                       Select a designation
@@ -318,6 +323,7 @@ const Register: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="input-field"
                 placeholder="Enter your password"
+                disabled={loading}
               />
             </div>
 
@@ -335,6 +341,7 @@ const Register: React.FC = () => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="input-field"
                 placeholder="Confirm your password"
+                disabled={loading}
               />
             </div>
 
@@ -357,23 +364,22 @@ const Register: React.FC = () => {
 
             <button
               type="submit"
-              disabled={loading || (showCaptcha && !captchaToken)}
+              disabled={loading}
               className={`btn-primary w-full ${
-                loading || (showCaptcha && !captchaToken) 
-                  ? 'opacity-50 cursor-not-allowed' 
-                  : ''
+                loading ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
               {loading ? (
-                'Creating account...'
-              ) : showCaptcha ? (
-                captchaToken ? (
-                  'Create account'
-                ) : (
-                  'Complete CAPTCHA to continue'
-                )
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                  Creating account...
+                </div>
+              ) : showCaptcha && !captchaToken ? (
+                'Complete CAPTCHA to continue'
+              ) : showCaptcha && captchaToken ? (
+                'Create account'
               ) : (
-                'Continue to verification'
+                'Continue'
               )}
             </button>
           </form>
@@ -383,6 +389,17 @@ const Register: React.FC = () => {
               <p className="text-xs text-gray-500">
                 Protected by hCaptcha for security
               </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCaptcha(false);
+                  resetCaptcha();
+                  setError('');
+                }}
+                className="text-xs text-indigo-600 hover:text-indigo-500 mt-1"
+              >
+                Go back to form
+              </button>
             </div>
           )}
         </div>
