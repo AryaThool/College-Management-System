@@ -462,14 +462,7 @@ export const getStudentLabMarks = async (studentId: string, semester?: number) =
 export const getLabMarks = async (labId: string, semester: number) => {
   const { data, error } = await supabase
     .from('lab_marks')
-    .select(`
-      *,
-      "Student Table" (
-        student_name,
-        student_email,
-        student_department
-      )
-    `)
+    .select('*')
     .eq('lab_id', labId)
     .eq('semester', semester)
     .order('marked_date', { ascending: false });

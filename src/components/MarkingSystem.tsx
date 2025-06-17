@@ -56,7 +56,7 @@ interface StudentMark {
   marks_obtained: number;
   total_marks: number;
   grade: string;
-  exam_type: string;
+  exam_type?: string;
   'Student Table'?: {
     student_name: string;
     student_email: string;
@@ -182,8 +182,7 @@ const MarkingSystem: React.FC = () => {
           student_id: mark.student_id,
           marks_obtained: mark.marks_obtained,
           total_marks: mark.total_marks,
-          grade: mark.grade,
-          exam_type: 'practical'
+          grade: mark.grade
         };
       });
       setStudentMarks(marksMap);
@@ -266,9 +265,13 @@ const MarkingSystem: React.FC = () => {
           student_id: studentId,
           marks_obtained: 0,
           total_marks: 100,
-          grade: 'F',
-          exam_type: markingType === 'subject' ? 'final' : 'practical'
+          grade: 'F'
         };
+        
+        // Only add exam_type for subject marks
+        if (markingType === 'subject') {
+          updated[studentId].exam_type = 'final';
+        }
       }
       
       updated[studentId] = { ...updated[studentId], [field]: value };
@@ -288,20 +291,20 @@ const MarkingSystem: React.FC = () => {
     try {
       const promises = Object.values(studentMarks).map(async (mark) => {
         if (mark.marks_obtained > 0) {
-          const markData = {
+          const baseMarkData = {
             student_id: mark.student_id,
             teacher_id: user!.id,
             marks_obtained: mark.marks_obtained,
             total_marks: mark.total_marks,
             grade: mark.grade,
-            semester: selectedSemester,
-            exam_type: mark.exam_type
+            semester: selectedSemester
           };
 
           if (markingType === 'subject') {
             const subjectMarkData = {
-              ...markData,
-              subject_id: selectedSubject
+              ...baseMarkData,
+              subject_id: selectedSubject,
+              exam_type: mark.exam_type || 'final'
             };
             
             if (mark.mark_id) {
@@ -311,7 +314,7 @@ const MarkingSystem: React.FC = () => {
             }
           } else {
             const labMarkData = {
-              ...markData,
+              ...baseMarkData,
               lab_id: selectedLab
             };
             
@@ -379,6 +382,16 @@ const MarkingSystem: React.FC = () => {
       credits: lab.credits
     });
     setShowLabForm(true);
+  };
+
+  const getStudentName = (studentId: string) => {
+    const student = students.find(s => s.student_id === studentId);
+    return student ? student.student_name : 'Unknown Student';
+  };
+
+  const getStudentEmail = (studentId: string) => {
+    const student = students.find(s => s.student_id === studentId);
+    return student ? student.student_email : '';
   };
 
   return (
@@ -767,7 +780,9 @@ const MarkingSystem: React.FC = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marks Obtained</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Marks</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exam Type</th>
+                    {markingType === 'subject' && (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exam Type</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -777,7 +792,7 @@ const MarkingSystem: React.FC = () => {
                       marks_obtained: 0,
                       total_marks: 100,
                       grade: 'F',
-                      exam_type: markingType === 'subject' ? 'final' : 'practical'
+                      ...(markingType === 'subject' && { exam_type: 'final' })
                     };
                     
                     return (
@@ -816,24 +831,20 @@ const MarkingSystem: React.FC = () => {
                             {mark.grade}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <select
-                            value={mark.exam_type}
-                            onChange={(e) => handleMarkChange(student.student_id, 'exam_type', e.target.value)}
-                            className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
-                          >
-                            {markingType === 'subject' ? (
-                              <>
-                                <option value="midterm">Midterm</option>
-                                <option value="final">Final</option>
-                                <option value="assignment">Assignment</option>
-                                <option value="quiz">Quiz</option>
-                              </>
-                            ) : (
-                              <option value="practical">Practical</option>
-                            )}
-                          </select>
-                        </td>
+                        {markingType === 'subject' && (
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <select
+                              value={mark.exam_type || 'final'}
+                              onChange={(e) => handleMarkChange(student.student_id, 'exam_type', e.target.value)}
+                              className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                            >
+                              <option value="midterm">Midterm</option>
+                              <option value="final">Final</option>
+                              <option value="assignment">Assignment</option>
+                              <option value="quiz">Quiz</option>
+                            </select>
+                          </td>
+                        )}
                       </tr>
                     );
                   })}
