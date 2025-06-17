@@ -20,8 +20,8 @@ const HCaptchaComponent = forwardRef<HCaptchaRef, HCaptchaComponentProps>(
     const [isLoaded, setIsLoaded] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
 
-    // Get the site key from environment variables
-    const siteKey = import.meta.env.VITE_HCAPTCHA_SITE_KEY || '10000000-ffff-ffff-ffff-000000000001';
+    // Use your actual site key
+    const siteKey = import.meta.env.VITE_HCAPTCHA_SITE_KEY || 'd0222e48-af26-46ca-882c-6c2e3406e4c4';
 
     useEffect(() => {
       // Check if device is mobile
@@ -104,4 +104,4 @@ const HCaptchaComponent = forwardRef<HCaptchaRef, HCaptchaComponentProps>(
 
 HCaptchaComponent.displayName = 'HCaptchaComponent';
 
-export default HCaptchaComponent;
+export default HCaptcha;
