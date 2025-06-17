@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, BookOpen, AlertCircle, ArrowRight } from 'lucide-react';
+import { User, BookOpen, AlertCircle, ArrowRight, Shield } from 'lucide-react';
 import { loginStudent, loginTeacher } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../types/types';
+import HCaptchaComponent, { HCaptchaRef } from '../components/HCaptcha';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -11,12 +12,50 @@ const Login: React.FC = () => {
   const [role, setRole] = useState<UserRole>('student');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [showCaptcha, setShowCaptcha] = useState(false);
   const navigate = useNavigate();
   const { setUser } = useAuth();
+  const captchaRef = useRef<HCaptchaRef>(null);
+
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token);
+    setError('');
+  };
+
+  const handleCaptchaError = (error: any) => {
+    setError('CAPTCHA verification failed. Please try again.');
+    setCaptchaToken(null);
+  };
+
+  const handleCaptchaExpire = () => {
+    setCaptchaToken(null);
+    setError('CAPTCHA expired. Please verify again.');
+  };
+
+  const resetCaptcha = () => {
+    if (captchaRef.current) {
+      captchaRef.current.resetCaptcha();
+    }
+    setCaptchaToken(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Show CAPTCHA on first attempt or if there was a previous error
+    if (!showCaptcha) {
+      setShowCaptcha(true);
+      return;
+    }
+
+    // Validate CAPTCHA
+    if (!captchaToken) {
+      setError('Please complete the CAPTCHA verification.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -49,6 +88,7 @@ const Login: React.FC = () => {
     } catch (err) {
       console.error('Login error:', err);
       setError('Invalid email or password. Please try again.');
+      resetCaptcha();
     } finally {
       setLoading(false);
     }
@@ -141,6 +181,23 @@ const Login: React.FC = () => {
               />
             </div>
 
+            {showCaptcha && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-center text-sm text-gray-600 mb-2">
+                  <Shield className="h-4 w-4 mr-2" />
+                  Please verify you're not a robot
+                </div>
+                <HCaptchaComponent
+                  ref={captchaRef}
+                  onVerify={handleCaptchaVerify}
+                  onError={handleCaptchaError}
+                  onExpire={handleCaptchaExpire}
+                  size="normal"
+                  theme="light"
+                />
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
@@ -161,19 +218,37 @@ const Login: React.FC = () => {
 
             <button
               type="submit"
-              disabled={loading}
-              className="btn-primary w-full"
+              disabled={loading || (showCaptcha && !captchaToken)}
+              className={`btn-primary w-full ${
+                loading || (showCaptcha && !captchaToken) 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : ''
+              }`}
             >
               {loading ? (
                 'Signing in...'
+              ) : showCaptcha ? (
+                captchaToken ? (
+                  <>
+                    Sign in
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </>
+                ) : (
+                  'Complete CAPTCHA to continue'
+                )
               ) : (
-                <>
-                  Sign in
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </>
+                'Continue to verification'
               )}
             </button>
           </form>
+
+          {showCaptcha && (
+            <div className="mt-4 text-center">
+              <p className="text-xs text-gray-500">
+                Protected by hCaptcha for security
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
