@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { User, BookOpen, Users, Calendar, ClipboardList, FileText, Clock, ChevronRight, Plus, Check, X, Clock3, Search, Filter, Trash2 } from 'lucide-react';
+import { User, BookOpen, Users, Calendar, ClipboardList, FileText, Clock, ChevronRight, Plus, Check, X, Clock3, Search, Filter, Trash2, Calculator } from 'lucide-react';
 import { createClass, getTeacherClasses, getClassStudents, markAttendance, deleteClass } from '../lib/supabase';
+import MarkingSystem from '../components/MarkingSystem';
 
 const TeacherDashboard: React.FC = () => {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<'overview' | 'attendance' | 'marking'>('overview');
   const [showAddClass, setShowAddClass] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [className, setClassName] = useState('');
@@ -174,71 +176,178 @@ const TeacherDashboard: React.FC = () => {
             </div>
           </div>
         </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="bg-white shadow rounded-lg p-6 lg:col-span-2">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-gray-900">Classes & Attendance</h2>
+
+        {/* Tab Navigation */}
+        <div className="border-b border-gray-200 mb-6">
+          <nav className="-mb-px flex space-x-8">
+            {[
+              { id: 'overview', label: 'Overview', icon: Calendar },
+              { id: 'attendance', label: 'Attendance', icon: ClipboardList },
+              { id: 'marking', label: 'Student Marking', icon: Calculator }
+            ].map(({ id, label, icon: Icon }) => (
               <button
-                onClick={() => setShowAddClass(true)}
-                className="flex items-center px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700 transition-colors"
+                key={id}
+                onClick={() => setActiveTab(id as any)}
+                className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === id
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Add New Class
+                <Icon className="h-5 w-5 mr-2" />
+                {label}
               </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="bg-white shadow rounded-lg p-6 lg:col-span-2">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-semibold text-gray-900">My Classes</h2>
+                <button
+                  onClick={() => setShowAddClass(true)}
+                  className="flex items-center px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add New Class
+                </button>
+              </div>
+
+              {showAddClass && (
+                <div className="mb-6 p-6 bg-gray-50 rounded-lg border border-gray-200">
+                  <form onSubmit={handleAddClass} className="space-y-4">
+                    <div>
+                      <label htmlFor="className" className="block text-sm font-medium text-gray-700 mb-1">
+                        Class Name
+                      </label>
+                      <input
+                        id="className"
+                        type="text"
+                        value={className}
+                        onChange={(e) => setClassName(e.target.value)}
+                        className="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                        placeholder="Enter class name"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="semester" className="block text-sm font-medium text-gray-700 mb-1">
+                        Semester
+                      </label>
+                      <input
+                        id="semester"
+                        type="number"
+                        value={semester}
+                        onChange={(e) => setSemester(e.target.value)}
+                        className="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                        min="1"
+                        max="8"
+                        placeholder="Enter semester number"
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowAddClass(false)}
+                        className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700"
+                      >
+                        Add Class
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {classes.map((cls) => (
+                  <div
+                    key={cls.class_id}
+                    className="p-4 rounded-lg border border-gray-200 hover:border-blue-800 hover:shadow-md transition-all duration-200"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="font-medium text-gray-900">{cls.class_name}</h3>
+                        <p className="text-sm text-gray-500">Semester {cls.semester}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {showDeleteConfirm === cls.class_id ? (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleDeleteClass(cls.class_id)}
+                              className="p-1 text-red-600 hover:bg-red-50 rounded"
+                              title="Confirm delete"
+                            >
+                              <Check className="h-5 w-5" />
+                            </button>
+                            <button
+                              onClick={() => setShowDeleteConfirm(null)}
+                              className="p-1 text-gray-600 hover:bg-gray-50 rounded"
+                              title="Cancel delete"
+                            >
+                              <X className="h-5 w-5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setShowDeleteConfirm(cls.class_id)}
+                            className="p-1 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                            title="Delete class"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {showAddClass && (
-              <div className="mb-6 p-6 bg-gray-50 rounded-lg border border-gray-200">
-                <form onSubmit={handleAddClass} className="space-y-4">
-                  <div>
-                    <label htmlFor="className" className="block text-sm font-medium text-gray-700 mb-1">
-                      Class Name
-                    </label>
-                    <input
-                      id="className"
-                      type="text"
-                      value={className}
-                      onChange={(e) => setClassName(e.target.value)}
-                      className="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      required
-                      placeholder="Enter class name"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="semester" className="block text-sm font-medium text-gray-700 mb-1">
-                      Semester
-                    </label>
-                    <input
-                      id="semester"
-                      type="number"
-                      value={semester}
-                      onChange={(e) => setSemester(e.target.value)}
-                      className="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      required
-                      min="1"
-                      max="8"
-                      placeholder="Enter semester number"
-                    />
-                  </div>
-                  <div className="flex justify-end space-x-3">
-                    <button
-                      type="button"
-                      onClick={() => setShowAddClass(false)}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700"
-                    >
-                      Add Class
-                    </button>
-                  </div>
-                </form>
+            <div className="bg-white shadow rounded-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">Upcoming Schedule</h2>
+                <a href="#" className="text-sm text-blue-800 hover:text-blue-700">Full Calendar</a>
               </div>
-            )}
+              <div className="space-y-4">
+                {upcomingSchedule.map((item) => (
+                  <div key={item.id} className="border-l-4 border-blue-800 pl-3 py-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-900">
+                          {item.type} {item.course && `- ${item.course}`}
+                        </h3>
+                        <p className="text-xs text-gray-500">{item.time}</p>
+                        <p className="text-xs text-gray-500">{item.location}</p>
+                      </div>
+                      {item.type === 'Class' && (
+                        <button className="px-2 py-1 text-xs text-blue-800 bg-blue-100 rounded-md hover:bg-blue-200">
+                          Details
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Attendance Tab */}
+        {activeTab === 'attendance' && (
+          <div className="bg-white shadow rounded-lg p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold text-gray-900">Mark Attendance</h2>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               {classes.map((cls) => (
@@ -258,40 +367,9 @@ const TeacherDashboard: React.FC = () => {
                       <h3 className="font-medium text-gray-900">{cls.class_name}</h3>
                       <p className="text-sm text-gray-500">Semester {cls.semester}</p>
                     </button>
-                    <div className="flex items-center gap-2">
-                      <ChevronRight className={`h-5 w-5 transition-transform duration-200 ${
-                        selectedClass === cls.class_id ? 'transform rotate-90' : ''
-                      }`} />
-                      {showDeleteConfirm === cls.class_id ? (
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleDeleteClass(cls.class_id)}
-                            className="p-1 text-red-600 hover:bg-red-50 rounded"
-                            title="Confirm delete"
-                          >
-                            <Check className="h-5 w-5" />
-                          </button>
-                          <button
-                            onClick={() => setShowDeleteConfirm(null)}
-                            className="p-1 text-gray-600 hover:bg-gray-50 rounded"
-                            title="Cancel delete"
-                          >
-                            <X className="h-5 w-5" />
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowDeleteConfirm(cls.class_id);
-                          }}
-                          className="p-1 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                          title="Delete class"
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </button>
-                      )}
-                    </div>
+                    <ChevronRight className={`h-5 w-5 transition-transform duration-200 ${
+                      selectedClass === cls.class_id ? 'transform rotate-90' : ''
+                    }`} />
                   </div>
                 </div>
               ))}
@@ -431,34 +509,12 @@ const TeacherDashboard: React.FC = () => {
               </div>
             )}
           </div>
+        )}
 
-          <div className="bg-white shadow rounded-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Upcoming Schedule</h2>
-              <a href="#" className="text-sm text-blue-800 hover:text-blue-700">Full Calendar</a>
-            </div>
-            <div className="space-y-4">
-              {upcomingSchedule.map((item) => (
-                <div key={item.id} className="border-l-4 border-blue-800 pl-3 py-2">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">
-                        {item.type} {item.course && `- ${item.course}`}
-                      </h3>
-                      <p className="text-xs text-gray-500">{item.time}</p>
-                      <p className="text-xs text-gray-500">{item.location}</p>
-                    </div>
-                    {item.type === 'Class' && (
-                      <button className="px-2 py-1 text-xs text-blue-800 bg-blue-100 rounded-md hover:bg-blue-200">
-                        Details
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        {/* Marking Tab */}
+        {activeTab === 'marking' && (
+          <MarkingSystem />
+        )}
       </div>
     </div>
   );

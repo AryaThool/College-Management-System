@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { User, BookOpen, Calendar, ClipboardList, FileText, Clock, ChevronRight } from 'lucide-react';
+import { User, BookOpen, Calendar, ClipboardList, FileText, Clock, ChevronRight, Award } from 'lucide-react';
 import { getStudentClasses, getStudentAttendance } from '../lib/supabase';
+import StudentResults from '../components/StudentResults';
 
 const StudentDashboard: React.FC = () => {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<'overview' | 'attendance' | 'results'>('overview');
   const [classes, setClasses] = useState<any[]>([]);
   const [attendance, setAttendance] = useState<any[]>([]);
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
@@ -100,9 +102,138 @@ const StudentDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Attendance Section */}
-          <div className="bg-white shadow rounded-lg p-6 lg:col-span-2">
+        {/* Tab Navigation */}
+        <div className="border-b border-gray-200 mb-6">
+          <nav className="-mb-px flex space-x-8">
+            {[
+              { id: 'overview', label: 'Overview', icon: Calendar },
+              { id: 'attendance', label: 'Attendance', icon: ClipboardList },
+              { id: 'results', label: 'Academic Results', icon: Award }
+            ].map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setActiveTab(id as any)}
+                className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === id
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Icon className="h-5 w-5 mr-2" />
+                {label}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Current Courses */}
+            <div className="bg-white shadow rounded-lg p-6 lg:col-span-2">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">Current Courses</h2>
+                <a href="#" className="text-sm text-blue-800 hover:text-blue-700">View All</a>
+              </div>
+              <div className="divide-y divide-gray-200">
+                {currentCourses.map((course) => (
+                  <div key={course.id} className="py-4">
+                    <div className="flex justify-between">
+                      <div>
+                        <h3 className="text-base font-medium text-gray-900">{course.code}: {course.name}</h3>
+                        <p className="text-sm text-gray-600">Instructor: {course.instructor}</p>
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 text-gray-500 mr-1" />
+                        <span className="text-sm text-gray-600">{course.time}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Announcements */}
+            <div className="bg-white shadow rounded-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">Announcements</h2>
+                <a href="#" className="text-sm text-blue-800 hover:text-blue-700">All Announcements</a>
+              </div>
+              <div className="space-y-4">
+                {announcements.map((announcement) => (
+                  <div key={announcement.id} className="border-l-4 border-blue-800 pl-3 py-2">
+                    <h3 className="text-sm font-medium text-gray-900">{announcement.title}</h3>
+                    <p className="text-xs text-gray-500">{announcement.date}</p>
+                    <p className="text-sm text-gray-700 mt-1 line-clamp-2">{announcement.content}</p>
+                    <a href="#" className="text-xs text-blue-800 hover:text-blue-700 mt-1 inline-flex items-center">
+                      Read more
+                      <ChevronRight className="h-3 w-3 ml-1" />
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Upcoming Assignments */}
+            <div className="bg-white shadow rounded-lg p-6 lg:col-span-3">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">Upcoming Assignments</h2>
+                <a href="#" className="text-sm text-blue-800 hover:text-blue-700">View All Assignments</a>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Assignment
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Course
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Due Date
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {upcomingAssignments.map((assignment) => (
+                      <tr key={assignment.id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {assignment.title}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {assignment.course}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(assignment.dueDate).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                            Due soon
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <a href="#" className="text-blue-800 hover:text-blue-700 mr-3">View</a>
+                          <a href="#" className="text-blue-800 hover:text-blue-700">Submit</a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Attendance Tab */}
+        {activeTab === 'attendance' && (
+          <div className="bg-white shadow rounded-lg p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-gray-900">Attendance Record</h2>
               <select
@@ -160,107 +291,12 @@ const StudentDashboard: React.FC = () => {
               </table>
             </div>
           </div>
+        )}
 
-          {/* Announcements */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Announcements</h2>
-              <a href="#" className="text-sm text-blue-800 hover:text-blue-700">All Announcements</a>
-            </div>
-            <div className="space-y-4">
-              {announcements.map((announcement) => (
-                <div key={announcement.id} className="border-l-4 border-blue-800 pl-3 py-2">
-                  <h3 className="text-sm font-medium text-gray-900">{announcement.title}</h3>
-                  <p className="text-xs text-gray-500">{announcement.date}</p>
-                  <p className="text-sm text-gray-700 mt-1 line-clamp-2">{announcement.content}</p>
-                  <a href="#" className="text-xs text-blue-800 hover:text-blue-700 mt-1 inline-flex items-center">
-                    Read more
-                    <ChevronRight className="h-3 w-3 ml-1" />
-                  </a>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Current Courses */}
-          <div className="bg-white shadow rounded-lg p-6 lg:col-span-2">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Current Courses</h2>
-              <a href="#" className="text-sm text-blue-800 hover:text-blue-700">View All</a>
-            </div>
-            <div className="divide-y divide-gray-200">
-              {currentCourses.map((course) => (
-                <div key={course.id} className="py-4">
-                  <div className="flex justify-between">
-                    <div>
-                      <h3 className="text-base font-medium text-gray-900">{course.code}: {course.name}</h3>
-                      <p className="text-sm text-gray-600">Instructor: {course.instructor}</p>
-                    </div>
-                    <div className="flex items-center">
-                      <Clock className="h-4 w-4 text-gray-500 mr-1" />
-                      <span className="text-sm text-gray-600">{course.time}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Upcoming Assignments */}
-          <div className="bg-white shadow rounded-lg p-6 lg:col-span-3">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Upcoming Assignments</h2>
-              <a href="#" className="text-sm text-blue-800 hover:text-blue-700">View All Assignments</a>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Assignment
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Course
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Due Date
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {upcomingAssignments.map((assignment) => (
-                    <tr key={assignment.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {assignment.title}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {assignment.course}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(assignment.dueDate).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                          Due soon
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <a href="#" className="text-blue-800 hover:text-blue-700 mr-3">View</a>
-                        <a href="#" className="text-blue-800 hover:text-blue-700">Submit</a>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+        {/* Results Tab */}
+        {activeTab === 'results' && (
+          <StudentResults />
+        )}
       </div>
     </div>
   );
