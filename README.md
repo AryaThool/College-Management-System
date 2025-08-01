@@ -5,22 +5,21 @@ A comprehensive College Management System designed to streamline and automate ad
 
 ## Features
 
-- **Student Management**: Create, update, and manage student profiles and academic records.
-- **Faculty Management**: Maintain faculty details, assign courses, and monitor performance.
-- **Course Management**: Add, modify, and organize course information including schedules and syllabi.
-- **Attendance Tracking**: Record and track student and staff attendance efficiently.
-- **Grading System**: Automate grade entry, calculation, and report generation.
-- **Timetable Management**: Generate and manage timetables for classes, exams, and activities.
-- **Notifications**: Send updates and important announcements to students and faculty.
-- **User Authentication**: Secure login and role-based access for administrators, faculty, and students.
-- **Reporting and Analytics**: Generate detailed reports for academic performance, attendance, and more.
+- Student Management: Create, update, and manage student profiles and academic records.
+- Faculty Management: Maintain faculty details, assign courses, and monitor performance.
+- Course Management: Add, modify, and organize course information including schedules and syllabi.
+- Attendance Tracking: Record and track student and staff attendance efficiently.
+- Grading System: Automate grade entry, calculation, and report generation.
+- Timetable Management: Generate and manage timetables for classes, exams, and activities.
+- Notifications: Send updates and important announcements to students and faculty.
+- User Authentication: Secure login and role-based access for administrators, faculty, and students.
+- Reporting and Analytics: Generate detailed reports for academic performance, attendance, and more.
 
 ## Technologies Used
 
-- **Frontend**: *[Specify frameworks/libraries, e.g., React, Angular, HTML, CSS, JavaScript]*
-- **Backend**: *[Specify frameworks/libraries, e.g., Node.js, Express, Django, Flask, Java, etc.]*
-- **Database**: *[Specify database, e.g., MySQL, PostgreSQL, MongoDB, etc.]*
-- **Other Tools**: *[e.g., Docker, REST APIs, JWT, etc.]*
+- Frontend: React, Next JS
+- Backend**: Supabase
+- Database**: PostgreSQL
 
 ## Getting Started
 
