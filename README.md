@@ -1,4 +1,3 @@
-````markdown name=README.md
 # College Management System
 
 A comprehensive College Management System designed to streamline and automate administrative and academic functions for educational institutions. This project serves as a centralized platform for managing student records, staff information, course registrations, attendance, grading, and more.
